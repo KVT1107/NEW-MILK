@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRI VENKATAM - Milk Log</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0b101e;
+            --glass-bg: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-highlight: rgba(255, 255, 255, 0.3);
+            --milk-white: #ffffff;
+            --milk-glow: rgba(255, 255, 255, 0.8);
+            --text-main: #f0f4fa;
+            --text-muted: #8c9bad;
+            --accent-sun: #ffd166;
+            --accent-moon: #8ecae6;
+            --alert-red: #ef4444;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(ellipse at 10% 20%, rgba(255,255,255,0.03) 0%, transparent 40%),
+                radial-gradient(ellipse at 80% 60%, rgba(255,255,255,0.02) 0%, transparent 50%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px 10px 40px 10px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='150' height='150' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20,10 Q40,5 50,25 T80,30 T90,60 T60,80 T30,70 Z' fill='rgba(255,255,255,0.015)'/%3E%3Cpath d='M10,80 Q20,60 5,50 T0,20 T15,10 T25,30 Z' fill='rgba(255,255,255,0.01)'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+        }
+
+        .container { width: 100%; max-width: 420px; position: relative; display: flex; flex-direction: column; }
+
+        /* --- HEADER & LIVE DATE --- */
+        .app-header { text-align: center; margin-bottom: 25px; padding-top: 10px; }
+
+        .app-header h1 {
+            margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: 2px;
+            background: linear-gradient(110deg, var(--milk-white) 15%, var(--accent-moon) 30%, var(--milk-white) 45%, var(--accent-sun) 65%, var(--milk-white) 85%);
+            background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text;
+            animation: flowLight 5s linear infinite; filter: drop-shadow(0 4px 15px rgba(255,255,255,0.2));
+        }
+
+        @keyframes flowLight { to { background-position: -200% center; } }
+
+        .app-header p { margin: 4px 0 0 0; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 3px; font-weight: 600; }
+
+        .live-date-panel {
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+            padding: 12px 20px; text-align: center; margin-bottom: 20px; backdrop-filter: blur(10px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .live-date-panel span { display: block; }
+        .live-day { color: var(--milk-white); font-weight: 700; font-size: 1.1rem; letter-spacing: 1px; margin-bottom: 2px;}
+        .live-full { color: var(--accent-moon); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;}
+
+        /* --- THE MILK TANK DASHBOARD --- */
+        .tank-wrapper { position: relative; margin-bottom: 20px; }
+
+        .happy-cow {
+            position: absolute; top: -38px; right: 15px; width: 55px; height: 55px;
+            z-index: 0; animation: cowBob 4s ease-in-out infinite alternate; transform-origin: bottom center;
+        }
+
+        @keyframes cowBob { 0% { transform: translateY(0) rotate(2deg); } 50% { transform: translateY(-8px) rotate(-2deg); } 100% { transform: translateY(0) rotate(4deg); } }
+
+        .milk-tank {
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 20px 20px 30px 20px; position: relative; overflow: hidden; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            box-shadow: inset 0 2px 6px var(--glass-highlight), 0 10px 25px rgba(0, 0, 0, 0.4); z-index: 1; min-height: 160px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .waves { position: absolute; bottom: 0; left: 0; width: 200%; height: 70px; z-index: -1; opacity: 0.85; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+        .wave-1, .wave-2 { position: absolute; bottom: 0; width: 100%; height: 100px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='%23FFFFFF'/%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-23.83V0Z' opacity='.5' fill='%23FFFFFF'/%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='%23FFFFFF'/%3E%3C/svg%3E") repeat-x; background-size: 50% 100%; }
+        .wave-1 { animation: waveFlow 6s linear infinite; }
+        .wave-2 { animation: waveFlow 4s linear infinite reverse; opacity: 0.5; bottom: 5px; }
+        @keyframes waveFlow { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        .tank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .month-selector { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 700; }
+        .arrow-btn { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--milk-white); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; box-shadow: inset 0 2px 4px var(--glass-highlight); }
+        .arrow-btn:active { transform: scale(0.85); }
+
+        .price-btn { font-family: 'Quicksand', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--milk-white); background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: transform 0.2s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 5px; backdrop-filter: blur(5px); }
+        .price-btn:active { transform: scale(0.95); }
+
+        .tank-data { display: flex; justify-content: space-between; align-items: flex-end; z-index: 2; position: relative;}
+        .data-block { background: rgba(12, 18, 34, 0.65); padding: 10px 14px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-align: center; min-width: 110px; }
+        .data-block p { margin: 0; font-size: 0.7rem; color: #a5b7d1; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .data-block h2 { margin: 4px 0 0 0; font-size: 1.8rem; color: var(--milk-white); font-weight: 700; text-shadow: 0 0 10px var(--milk-glow); line-height: 1; }
+        .data-block span { font-size: 0.9rem; color: rgba(255,255,255,0.7); }
+
+        /* --- SUMMARY BOX --- */
+        .summary-wrapper { position: relative; margin-bottom: 25px; }
+        .summary-box { background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; display: flex; justify-content: space-between; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 2px var(--glass-highlight); position: relative; z-index: 1;}
+        .summary-col { display: flex; flex-direction: column; align-items: center; width: 50%; }
+        .summary-col:first-child { border-right: 1px solid rgba(255,255,255,0.1); }
+        .summary-col p { margin: 0 0 4px 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;}
+        .summary-col h3 { margin: 0; font-size: 1.6rem; color: var(--milk-white); font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+
+        /* --- COMPACT MILK CAN CALENDAR GRID --- */
+        .calendar-header { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin-bottom: 25px;}
+
+        .cal-cell { background: transparent; padding: 0; display: flex; flex-direction: column; align-items: center; cursor: pointer; min-height: 80px; position: relative; }
+        
+        /* Optimized Performance: Replaced heavy backdrop filters with solid glass colors for the grid */
+        .can-cap {
+            width: 60%; height: 18px; background: linear-gradient(to bottom, rgba(255,255,255,0.25), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255,255,255,0.2); border-bottom: none; border-radius: 4px 4px 0 0;
+            display: flex; justify-content: center; align-items: center; color: var(--milk-white); font-weight: 800; font-size: 0.75rem;
+            z-index: 2; box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 -2px 5px rgba(0,0,0,0.2);
+        }
+
+        .can-body {
+            width: 100%; flex-grow: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px 12px 8px 8px; position: relative; overflow: hidden; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 4px 2px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2), inset 0 -4px 10px rgba(0,0,0,0.1); z-index: 1; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cal-cell:active:not(.empty) .can-body { transform: scale(0.9); }
+        .cal-cell.empty .can-cap, .cal-cell.empty .can-body { display: none; }
+
+        .cal-cell.today .can-body { border: 2px solid var(--milk-white); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+        .cal-cell.today .can-cap { background: var(--milk-white); color: var(--bg-deep); }
+        
+        .cal-cell.logged-zero .can-body { border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); }
+        .cal-cell.logged-zero .can-cap { background: linear-gradient(to bottom, rgba(239, 68, 68, 0.5), rgba(239, 68, 68, 0.1)); color: #fff; border-color: rgba(239, 68, 68, 0.3); }
+
+        .milk-indicators { display: flex; flex-direction: column; gap: 3px; width: 100%; align-items: center; z-index: 2; }
+        .indicator { display: flex; align-items: center; justify-content: center; gap: 2px; font-size: 0.7rem; font-weight: 700; width: 100%; line-height: 1; }
+        .indicator.aft { color: var(--accent-sun); text-shadow: 0 0 5px rgba(255, 209, 102, 0.5); }
+        .indicator.nig { color: var(--accent-moon); text-shadow: 0 0 5px rgba(142, 202, 230, 0.5); }
+        .indicator.zero { color: var(--alert-red); font-size: 1rem; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        .indicator svg { width: 10px; height: 10px; stroke-width: 2.5; }
+
+        .cell-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--milk-white); opacity: 0.2; z-index: 1; transition: height 0.4s ease-in-out; }
+
+        /* --- MONTHLY INSIGHTS --- */
+        .month-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;}
+        .month-insights { background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.2); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+        .month-insights h3 { margin: 0; font-size: 1.1rem; color: var(--milk-white); display: flex; align-items: center; gap: 8px;}
+        .reset-btn { background: transparent; border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; border-radius: 10px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Quicksand', sans-serif; font-size: 0.8rem; font-weight: 700; transition: all 0.2s; }
+        .reset-btn:hover { background: rgba(239, 68, 68, 0.1); border-color: var(--alert-red); }
+        .reset-btn:active { transform: scale(0.95); }
+
+        .insight-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .insight-row:last-child { border-bottom: none; padding-bottom: 0;}
+        .insight-row span:first-child { color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;}
+        .insight-val { font-weight: 700; font-size: 0.9rem; max-width: 60%; text-align: right; line-height: 1.4;}
+        .val-red { color: #fca5a5; }
+        .val-gold { color: #fef08a; }
+        .val-blue { color: #93c5fd; }
+
+        /* --- MODALS --- */
+        .liquid-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(12, 18, 34, 0.85); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            z-index: 100; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+            opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .liquid-modal-overlay.active { opacity: 1; visibility: visible; pointer-events: all; }
+
+        .liquid-modal {
+            background: rgba(20, 25, 40, 0.95); border: 1px solid var(--glass-border); border-top: 1px solid var(--glass-highlight); border-left: 1px solid var(--glass-highlight);
+            border-radius: 30px; width: 100%; max-width: 360px; padding: 30px 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; gap: 20px;
+            transform: scale(0.9) translateY(20px); opacity: 0; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            will-change: transform, opacity;
+        }
+
+        .liquid-modal-overlay.active .liquid-modal { transform: scale(1) translateY(0); opacity: 1; }
+
+        .modal-header { text-align: center; margin-bottom: 5px; }
+        .modal-header h3 { margin: 0; font-size: 1.6rem; color: var(--milk-white); font-weight: 700; text-shadow: 0 0 15px var(--milk-glow); }
+        .modal-header p { margin: 5px 0 0 0; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;}
+
+        .shift-section { background: rgba(0, 0, 0, 0.2); border-radius: 20px; padding: 16px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .shift-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 12px; }
+        .shift-title.aft { color: var(--accent-sun); }
+        .shift-title.nig { color: var(--accent-moon); }
+        .shift-title svg { stroke-width: 2.5; width: 18px; height: 18px;}
+
+        .bubble-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .bubble {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: var(--text-main); font-family: 'Quicksand', sans-serif; font-size: 0.9rem; font-weight: 700;
+            padding: 10px; border-radius: 16px; cursor: pointer; box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, border 0.2s, color 0.2s; flex-grow: 1; text-align: center;
+        }
+
+        .bubble:active { transform: scale(0.9); }
+        .bubble.selected { background: var(--milk-white); color: var(--bg-deep); border-color: var(--milk-white); box-shadow: 0 0 15px var(--milk-glow), inset 0 -2px 5px rgba(0,0,0,0.2); transform: scale(1.05); }
+        
+        .bubble-zero { color: #fca5a5; }
+        .bubble-zero.selected { background: #ef4444; border-color: #ef4444; color: #fff; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+
+        .done-btn {
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05)); border: 1px solid var(--milk-white); color: var(--milk-white);
+            font-family: 'Quicksand', sans-serif; font-size: 1.05rem; font-weight: 700; padding: 14px; border-radius: 20px; cursor: pointer; width: 100%;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); margin-top: 5px; box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 2px 5px rgba(255,255,255,0.5);
+        }
+        .done-btn:active { transform: scale(0.95); }
+
+        .apply-all-btn { background: transparent; border: 1px dashed rgba(255,255,255,0.3); color: #a5b7d1; font-family: 'Quicksand', sans-serif; font-size: 0.9rem; font-weight: 700; padding: 10px; border-radius: 16px; cursor: pointer; width: 100%; transition: all 0.2s ease; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .apply-all-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.05); }
+
+        .price-input-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 20px 0; }
+        .price-input { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.3); color: var(--milk-white); font-family: 'Quicksand', sans-serif; font-size: 2rem; font-weight: 700; padding: 10px; border-radius: 16px; width: 100px; text-align: center; outline: none; transition: border-color 0.3s; }
+        .price-input:focus { border-color: var(--milk-white); box-shadow: 0 0 15px var(--milk-glow); }
+        .cancel-btn { background: transparent; border: none; color: var(--text-muted); font-family: 'Quicksand', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; transition: color 0.3s; }
+        .cancel-btn:hover { color: var(--milk-white); }
+        
+        footer { text-align: center; color: var(--text-muted); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-top: auto; padding-top: 10px; }
+        footer span { color: var(--milk-white); font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <header class="app-header">
+        <h1>SRI VENKATAM</h1>
+        <p>Daily Milk Log</p>
+    </header>
+
+    <div class="live-date-panel">
+        <span class="live-day" id="liveDayName">Sunday</span>
+        <span class="live-full" id="liveFullDate">September 13, 2026</span>
+    </div>
+
+    <!-- Milk Tank Dashboard -->
+    <div class="tank-wrapper">
+        <div class="happy-cow">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 25 45 C 5 35, 5 60, 25 50" fill="#ffffff" />
+                <path d="M 75 45 C 95 35, 95 60, 75 50" fill="#ffffff" />
+                <path d="M 30 35 Q 25 15 35 25" stroke="#f0ddb6" stroke-width="5" fill="none" stroke-linecap="round"/>
+                <path d="M 70 35 Q 75 15 65 25" stroke="#f0ddb6" stroke-width="5" fill="none" stroke-linecap="round"/>
+                <rect x="25" y="30" width="50" height="45" rx="15" fill="#ffffff" />
+                <path d="M 25 35 C 35 30, 35 45, 25 50" fill="#1a1a1a" /> 
+                <path d="M 75 40 C 65 35, 65 50, 75 55" fill="#1a1a1a" /> 
+                <ellipse cx="50" cy="65" rx="20" ry="12" fill="#ffb6c1" />
+                <circle cx="42" cy="63" r="2.5" fill="#d16b7a" />
+                <circle cx="58" cy="63" r="2.5" fill="#d16b7a" />
+                <circle cx="38" cy="45" r="3.5" fill="#1a1a1a" />
+                <circle cx="62" cy="45" r="3.5" fill="#1a1a1a" />
+            </svg>
+        </div>
+
+        <div class="milk-tank">
+            <div class="waves">
+                <div class="wave-1"></div>
+                <div class="wave-2"></div>
+            </div>
+            
+            <div class="tank-header">
+                <div class="month-selector">
+                    <button class="arrow-btn" onclick="changeMonth(-1)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span id="displayMonth">Sep 2026</span>
+                    <button class="arrow-btn" onclick="changeMonth(1)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+                
+                <button class="price-btn" onclick="openPriceModal()">
+                    ₹<span id="priceDisplay">50</span> / L
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                </button>
+            </div>
+
+            <div class="tank-data">
+                <div class="data-block" style="text-align: left;">
+                    <p>Monthly Total</p>
+                    <h2 id="totalLiters">0<span>L</span></h2>
+                </div>
+                <div class="data-block" style="text-align: right;">
+                    <p>Estimated Bill</p>
+                    <h2 id="totalBill">₹0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shift Summary Box -->
+    <div class="summary-wrapper">
+        <div class="summary-box">
+            <div class="summary-col">
+                <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-sun)" stroke-width="2.5"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg> Afternoon</p>
+                <h3 id="sumAfternoon">0L</h3>
+            </div>
+            <div class="summary-col">
+                <p><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-moon)" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg> Night</p>
+                <h3 id="sumNight">0L</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="calendar-header">
+        <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+
+    <!-- Monthly Insights Section -->
+    <div class="month-insights">
+        <div class="month-header-flex">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--milk-white)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                Monthly Insights
+            </h3>
+            <button class="reset-btn" onclick="resetMonth()" title="Reset Month">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Reset
+            </button>
+        </div>
+        
+        <div class="insight-row">
+            <span>Extra Milk Days (> 1.5L)</span>
+            <span id="insightExtra" class="insight-val val-gold">None</span>
+        </div>
+        <div class="insight-row">
+            <span>Less Milk Days (&lt; 1.5L, > 0)</span>
+            <span id="insightLess" class="insight-val val-blue">None</span>
+        </div>
+        <div class="insight-row">
+            <span>No Milk Days (❌)</span>
+            <span id="insightZero" class="insight-val val-red">None</span>
+        </div>
+    </div>
+
+    <footer>Created by <span>K V T</span></footer>
+</div>
+
+<!-- Milk Log Input Modal -->
+<div class="liquid-modal-overlay" id="liquidModal">
+    <div class="liquid-modal">
+        <div class="modal-header">
+            <h3 id="modalDateTitle">Sep 13</h3>
+            <p>Log Milk Intake</p>
+        </div>
+
+        <div class="shift-section">
+            <div class="shift-title aft">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                Afternoon Shift
+            </div>
+            <div class="bubble-grid" id="aftBubbles">
+                <button class="bubble bubble-zero" onclick="selectAmount('aft', 0)">❌</button>
+                <button class="bubble" onclick="selectAmount('aft', 0.5)">0.5</button>
+                <button class="bubble" onclick="selectAmount('aft', 0.75)">0.75</button>
+                <button class="bubble" onclick="selectAmount('aft', 1.0)">1.0</button>
+                <button class="bubble" onclick="selectAmount('aft', 1.5)">1.5</button>
+                <button class="bubble" onclick="selectAmount('aft', 2.0)">2.0</button>
+            </div>
+        </div>
+
+        <div class="shift-section">
+            <div class="shift-title nig">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                Night Shift
+            </div>
+            <div class="bubble-grid" id="nigBubbles">
+                <button class="bubble bubble-zero" onclick="selectAmount('nig', 0)">❌</button>
+                <button class="bubble" onclick="selectAmount('nig', 0.5)">0.5</button>
+                <button class="bubble" onclick="selectAmount('nig', 0.75)">0.75</button>
+                <button class="bubble" onclick="selectAmount('nig', 1.0)">1.0</button>
+                <button class="bubble" onclick="selectAmount('nig', 1.5)">1.5</button>
+                <button class="bubble" onclick="selectAmount('nig', 2.0)">2.0</button>
+            </div>
+        </div>
+        
+        <div style="display:flex; flex-direction: column; gap: 8px;">
+            <button class="done-btn" onclick="closeModal()">Save Updates</button>
+            <button class="apply-all-btn" onclick="applyForWholeMonth()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                Apply to Whole Month
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Price Change Modal -->
+<div class="liquid-modal-overlay" id="priceModal">
+    <div class="liquid-modal" style="text-align: center;">
+        <div class="modal-header">
+            <h3>Milk Rate</h3>
+            <p>Enter the current cost per liter</p>
+        </div>
+        
+        <div class="price-input-container">
+            <span style="font-size: 1.5rem; color: var(--text-muted); font-weight: 700;">₹</span>
+            <input type="number" id="priceInput" class="price-input" value="50" step="0.5" min="1">
+        </div>
+
+        <button class="done-btn" onclick="savePrice()">Update Price</button>
+        <button class="cancel-btn" onclick="closePriceModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    let currentDate = new Date(); 
+    let currentViewMonth = currentDate.getMonth();
+    let currentViewYear = currentDate.getFullYear();
+    
+    let milkPrice = parseFloat(localStorage.getItem('liquid_milk_price')) || 50;
+    let milkData = JSON.parse(localStorage.getItem('liquid_milk_data')) || {};
+    let activeEditDate = null; 
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    function init() {
+        updateLiveDate();
+        document.getElementById("priceDisplay").innerText = milkPrice;
+        renderCalendar();
+    }
+
+    function updateLiveDate() {
+        document.getElementById("liveDayName").innerText = dayNames[currentDate.getDay()];
+        document.getElementById("liveFullDate").innerText = `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`;
+    }
+
+    // --- PRICE LOGIC ---
+    function openPriceModal() {
+        document.getElementById("priceInput").value = milkPrice;
+        document.getElementById("priceModal").classList.add("active");
+    }
+
+    function closePriceModal() { document.getElementById("priceModal").classList.remove("active"); }
+
+    function savePrice() {
+        let newPrice = parseFloat(document.getElementById("priceInput").value);
+        if (newPrice > 0) {
+            milkPrice = newPrice;
+            localStorage.setItem('liquid_milk_price', milkPrice);
+            document.getElementById("priceDisplay").innerText = milkPrice;
+            renderCalendar(); 
+            closePriceModal();
+        }
+    }
+
+    // --- CALENDAR LOGIC ---
+    function changeMonth(delta) {
+        currentViewMonth += delta;
+        if (currentViewMonth > 11) { currentViewMonth = 0; currentViewYear++; }
+        else if (currentViewMonth < 0) { currentViewMonth = 11; currentViewYear--; }
+        renderCalendar();
+    }
+
+    function resetMonth() {
+        if(confirm(`Are you sure you want to clear all milk logs for ${monthNames[currentViewMonth]} ${currentViewYear}?`)) {
+            const prefix = `${currentViewYear}-${String(currentViewMonth + 1).padStart(2, '0')}`;
+            Object.keys(milkData).forEach(key => {
+                if(key.startsWith(prefix)) {
+                    delete milkData[key];
+                }
+            });
+            localStorage.setItem('liquid_milk_data', JSON.stringify(milkData));
+            renderCalendar();
+        }
+    }
+
+    function renderCalendar() {
+        document.getElementById("displayMonth").innerText = `${monthNames[currentViewMonth]} ${currentViewYear}`;
+        const grid = document.getElementById("calendarGrid");
+        grid.innerHTML = "";
+
+        const firstDay = new Date(currentViewYear, currentViewMonth, 1).getDay();
+        const daysInMonth = new Date(currentViewYear, currentViewMonth + 1, 0).getDate();
+        
+        let monthTotalLiters = 0;
+        let totalAft = 0;
+        let totalNig = 0;
+        
+        let extraDaysList = [];
+        let lessDaysList = [];
+        let zeroDaysList = [];
+
+        // Empty padding cells
+        for (let i = 0; i < firstDay; i++) {
+            let emptyCell = document.createElement("div");
+            emptyCell.className = "cal-cell empty";
+            grid.appendChild(emptyCell);
+        }
+
+        // Generate Compact Milk Cans
+        for (let day = 1; day <= daysInMonth; day++) {
+            let dateStr = `${currentViewYear}-${String(currentViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            let todayStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+            
+            let isLogged = milkData.hasOwnProperty(dateStr);
+            let data = milkData[dateStr] || { aft: 0, nig: 0 };
+            let totalForDay = data.aft + data.nig;
+            
+            if(isLogged) {
+                if(totalForDay === 0) zeroDaysList.push(day);
+                else if(totalForDay < 1.5) lessDaysList.push(day);
+                else if(totalForDay > 1.5) extraDaysList.push(day);
+            }
+            
+            monthTotalLiters += totalForDay;
+            totalAft += data.aft;
+            totalNig += data.nig;
+
+            let cell = document.createElement("div");
+            cell.className = `cal-cell ${dateStr === todayStr ? 'today' : ''} ${isLogged && totalForDay === 0 ? 'logged-zero' : ''}`;
+            cell.onclick = () => openModal(dateStr, day);
+
+            // Structure: Cap (Date) -> Body (Indicators & Fill)
+            let innerHTML = `<div class="can-cap">${day}</div><div class="can-body">`;
+            
+            if (totalForDay > 0) {
+                let fillPct = Math.min((totalForDay / 3.0) * 100, 100);
+                innerHTML += `<div class="cell-fill" style="height: ${fillPct}%"></div>`;
+                innerHTML += `<div class="milk-indicators">`;
+                if (data.aft > 0) innerHTML += `<div class="indicator aft"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg> ${data.aft}</div>`;
+                if (data.nig > 0) innerHTML += `<div class="indicator nig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg> ${data.nig}</div>`;
+                innerHTML += `</div>`;
+            } else if (isLogged && totalForDay === 0) {
+                innerHTML += `<div class="indicator zero">❌</div>`;
+            }
+            
+            innerHTML += `</div>`; 
+            cell.innerHTML = innerHTML;
+            grid.appendChild(cell);
+        }
+
+        // Update Summaries
+        document.getElementById("totalLiters").innerHTML = `${monthTotalLiters}<span>L</span>`;
+        const exactBill = monthTotalLiters * milkPrice;
+        document.getElementById("totalBill").innerText = `₹${exactBill % 1 === 0 ? exactBill : exactBill.toFixed(1)}`;
+        document.getElementById("sumAfternoon").innerText = `${totalAft}L`;
+        document.getElementById("sumNight").innerText = `${totalNig}L`;
+        
+        // Update Insights List
+        document.getElementById("insightExtra").innerText = extraDaysList.length > 0 ? extraDaysList.join(', ') : "None";
+        document.getElementById("insightLess").innerText = lessDaysList.length > 0 ? lessDaysList.join(', ') : "None";
+        document.getElementById("insightZero").innerText = zeroDaysList.length > 0 ? zeroDaysList.join(', ') : "None";
+
+        let daysLogged = Object.keys(milkData).filter(d => d.startsWith(`${currentViewYear}-${String(currentViewMonth + 1).padStart(2, '0')}`)).length;
+        let fillPercentage = (daysLogged / daysInMonth) * 100;
+        let waveHeight = 15 + (fillPercentage * 0.85); 
+        document.querySelector('.waves').style.transform = `translateY(${100 - waveHeight}%)`;
+    }
+
+    // --- ENTRY LOGIC ---
+    function openModal(dateStr, dayNum) {
+        activeEditDate = dateStr;
+        document.getElementById("modalDateTitle").innerText = `${monthNames[currentViewMonth]} ${dayNum}`;
+        
+        let data = milkData[dateStr] || { aft: null, nig: null };
+        updateBubbleUI('aft', data.aft !== null ? data.aft : -1);
+        updateBubbleUI('nig', data.nig !== null ? data.nig : -1);
+
+        const modal = document.getElementById("liquidModal");
+        modal.classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById("liquidModal").classList.remove('active');
+        localStorage.setItem('liquid_milk_data', JSON.stringify(milkData));
+        setTimeout(() => { renderCalendar(); }, 200); 
+    }
+
+    function selectAmount(shift, amount) {
+        if (!milkData[activeEditDate]) { milkData[activeEditDate] = { aft: 0, nig: 0 }; }
+        milkData[activeEditDate][shift] = amount;
+        updateBubbleUI(shift, amount);
+    }
+
+    function updateBubbleUI(shift, activeAmount) {
+        const container = document.getElementById(`${shift}Bubbles`);
+        const bubbles = container.querySelectorAll('.bubble');
+        
+        bubbles.forEach(b => {
+            const valStr = b.innerText;
+            let val = valStr === '❌' ? 0 : parseFloat(valStr);
+            if (val === activeAmount) {
+                b.classList.add('selected');
+            } else {
+                b.classList.remove('selected');
+            }
+        });
+    }
+
+    function applyForWholeMonth() {
+        let currentDayData = milkData[activeEditDate] || { aft: 0, nig: 0 };
+        let aftVal = currentDayData.aft;
+        let nigVal = currentDayData.nig;
+
+        const daysInMonth = new Date(currentViewYear, currentViewMonth + 1, 0).getDate();
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            let dStr = `${currentViewYear}-${String(currentViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            milkData[dStr] = { aft: aftVal, nig: nigVal };
+        }
+        
+        closeModal(); 
+    }
+
+    init();
+</script>
+
+</body>
+</html>
